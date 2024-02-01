@@ -1,14 +1,32 @@
 import { getVectorStore } from "@/lib/astradb";
-import { ChatPromptTemplate, PromptTemplate } from "@langchain/core/prompts";
+import { AIMessage, HumanMessage } from "@langchain/core/messages";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+  PromptTemplate,
+} from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
-import { LangChainStream, StreamingTextResponse } from "ai";
+import {
+  LangChainStream,
+  StreamingTextResponse,
+  Message as VercelChatMessage,
+} from "ai";
 import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
+import { createHistoryAwareRetriever } from "langchain/chains/history_aware_retriever";
 import { createRetrievalChain } from "langchain/chains/retrieval";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const messages = body.messages;
+
+    const chatHistory = messages
+      .slice(0, -1)
+      .map((m: VercelChatMessage) =>
+        m.role === "user"
+          ? new HumanMessage(m.content)
+          : new AIMessage(m.content),
+      );
 
     const currentMessageContent = messages[messages.length - 1].content;
 
@@ -21,6 +39,29 @@ export async function POST(req: Request) {
       verbose: true,
     });
 
+    const rephrasingModel = new ChatOpenAI({
+      modelName: "gpt-3.5-turbo",
+      verbose: true,
+    });
+
+    const retriever = (await getVectorStore()).asRetriever();
+
+    const rephrasePrompt = ChatPromptTemplate.fromMessages([
+      new MessagesPlaceholder("chat_history"),
+      ["user", "{input}"],
+      [
+        "user",
+        "Given the above conversation, generate a search query to look up in order to get information relevant to the current question. " +
+          "Don't leave out any relevant keywords. Only return the query and no other text.",
+      ],
+    ]);
+
+    const historyAwareRetrieverChain = await createHistoryAwareRetriever({
+      llm: rephrasingModel,
+      retriever,
+      rephrasePrompt,
+    });
+
     const prompt = ChatPromptTemplate.fromMessages([
       [
         "system",
@@ -30,6 +71,7 @@ export async function POST(req: Request) {
           "Format your messages in markdown format.\n\n" +
           "Context:\n{context}",
       ],
+      new MessagesPlaceholder("chat_history"),
       ["user", "{input}"],
     ]);
 
@@ -42,15 +84,14 @@ export async function POST(req: Request) {
       documentSeparator: "\n--------\n",
     });
 
-    const retriever = (await getVectorStore()).asRetriever();
-
     const retrievalChain = await createRetrievalChain({
       combineDocsChain,
-      retriever,
+      retriever: historyAwareRetrieverChain,
     });
 
     retrievalChain.invoke({
       input: currentMessageContent,
+      chat_history: chatHistory,
     });
 
     return new StreamingTextResponse(stream);
