@@ -6,11 +6,13 @@ import {
   PromptTemplate,
 } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
+import { Redis } from "@upstash/redis";
 import {
   LangChainStream,
   StreamingTextResponse,
   Message as VercelChatMessage,
 } from "ai";
+import { UpstashRedisCache } from "langchain/cache/upstash_redis";
 import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
 import { createHistoryAwareRetriever } from "langchain/chains/history_aware_retriever";
 import { createRetrievalChain } from "langchain/chains/retrieval";
@@ -30,6 +32,10 @@ export async function POST(req: Request) {
 
     const currentMessageContent = messages[messages.length - 1].content;
 
+    const cache = new UpstashRedisCache({
+      client: Redis.fromEnv(),
+    });
+
     const { stream, handlers } = LangChainStream();
 
     const chatModel = new ChatOpenAI({
@@ -37,11 +43,13 @@ export async function POST(req: Request) {
       streaming: true,
       callbacks: [handlers],
       verbose: true,
+      cache,
     });
 
     const rephrasingModel = new ChatOpenAI({
       modelName: "gpt-3.5-turbo",
       verbose: true,
+      cache,
     });
 
     const retriever = (await getVectorStore()).asRetriever();
