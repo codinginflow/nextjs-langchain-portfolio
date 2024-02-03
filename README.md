@@ -1,36 +1,20 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Next.js LangChain.js Website Chatbot
 
-## Getting Started
+Learn how to build a chatbot that is **trained on your website's data**.
 
-First, run the development server:
+Build a portfolio website with an AI chatbot that can answer **any question** about you.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Or build a **smart documentation page** that can answer users' questions based on the contents of the website.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Built with:
+- Next.js 14
+- LangChain.js
+- OpenAI ChatGPT API
+- DataStax AstraDB (vector store)
+- Upstash Redis (caching)
+- Tailwind CSS
+- TypeScript
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Watch the free tutorial on YouTube: https://www.youtube.com/watch?v=1LZltsK5nKI
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+![thumbnail](https://github.com/codinginflow/nextjs-langchain-portfolio/assets/52977034/32b81c40-a61d-4e79-9d2d-ee8ef4a3cf90)
